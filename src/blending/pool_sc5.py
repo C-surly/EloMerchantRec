@@ -49,7 +49,7 @@ CAND = {
 
 def main():
     assert os.environ.get("ELO_SEED") == "777", "必须 ELO_SEED=777 运行(折协议纪律)"
-    prefer_local = os.environ.get("ELO_PREFER_LOCAL_RANK6", "0") == "1"
+    prefer_local = os.environ.get("ELO_PREFER_LOCAL_FINAL", "0") == "1"
     bases = vf.load_bases()
     base = pd.read_parquet(paths.FEATURES)
     train = base[base["is_train"] == 1].reset_index(drop=True)

@@ -64,4 +64,4 @@ step "7/7 F31 终局融合(BayesianRidge 二层 + 折内 isotonic 校准)"
 $PY src/fuse_final.py
 
 step "主链路完成 → submission/submission_v14_repro.csv"
-echo "接着跑第六名终局链路:bash run_rank6.sh" >&2
+echo "接着跑完整复现链路:bash run_final_repro.sh" >&2

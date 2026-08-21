@@ -4,6 +4,6 @@
 
 默认文件名:
 
-- `submission_rank6_3.59428.csv.gz`
+- `submission_final_3.59428.csv.gz`
 
 该目录下的生成文件默认不纳入 git。

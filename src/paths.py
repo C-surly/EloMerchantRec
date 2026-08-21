@@ -59,10 +59,10 @@ FEATURE_IMPORTANCE = str(OUT_DIR / "feature_importance.csv")
 V39_DIR = OUT_DIR / "v39"                                 # SC5 / U2 落点
 V39 = str(V39_DIR)
 
-# 第六名终局链路的三个约定产物(改名只需改这里)
+# 终局复现链路的三个约定产物(改名只需改这里)
 SC5_CSV = str(V39_DIR / "submission_v39_best.csv")        # SC5:跨仓成员合流
 U2_CSV = str(V39_DIR / "submission_v39b_union.csv")       # U2:并池终验
-RANK6_CSV_GZ = str(SUB_DIR / "submission_rank6_3.59428.csv.gz")
+FINAL_REPRO_CSV_GZ = str(SUB_DIR / "submission_final_3.59428.csv.gz")
 
 # 校验参考(只读,不参与训练)
 CARD_ORDER = str(ARTIFACT_DIR / "card_order.csv")

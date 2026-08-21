@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# 第六名终局链路:主链路 → nn_clf → dq → tp/ct/ssl/sk → SC5 → U2 → F1。
+# 终局复现链路:主链路 → nn_clf → dq → tp/ct/ssl/sk → SC5 → U2 → F1。
 # 默认增量运行:已存在的中间产物直接复用;ELO_FORCE=1 时强制重算 SC5/U2/F1。
-# 默认融合口径是 frozen-first;仅在 ELO_PREFER_LOCAL_RANK6=1 时切到本地成员优先。
+# 默认融合口径是 frozen-first;仅在 ELO_PREFER_LOCAL_FINAL=1 时切到本地成员优先。
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -84,6 +84,6 @@ else
 fi
 
 step "7/7 终局合成与校验:F1 = 0.6 * U2 + 0.4 * SC5"
-$PY src/blending/blend_rank6.py
+$PY src/blending/blend_final.py
 
-step "第六名链路完成 → submission/submission_rank6_3.59428.csv.gz"
+step "终局复现链路完成 → submission/submission_final_3.59428.csv.gz"

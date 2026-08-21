@@ -16,7 +16,7 @@
 | `fuse_final.py` | 主链路终局融合 |
 | `fuse_opt.py` | 融合层扩展工具,供 `SC5` / `U2` 调用 |
 
-## 第六名补充
+## 终局补充
 
 | 脚本 | 职责 |
 |---|---|
@@ -31,13 +31,13 @@
 | `extras/sk_row.py` | 生成 `sk_row` |
 | `blending/pool_sc5.py` | 生成 `SC5` |
 | `blending/pool_union.py` | 生成 `U2` |
-| `blending/blend_rank6.py` | 生成最终 `3.59428` 提交 |
+| `blending/blend_final.py` | 生成最终 `3.59428` 提交 |
 | `blending/paths.py` | 统一管理旧仓辅助输出路径 |
 
 ## 运行方式
 
 - 主链路: `bash run_all.sh`
-- 完整第六名链路: `bash run_rank6.sh`
+- 完整复现链路: `bash run_final_repro.sh`
 - `extras/` 表示主链路之外、终局复现所需的补充组件
-- 默认模式下 `run_rank6.sh` 按 `frozen-first` 口径运行,先走历史冻结成员
-- 若设置 `ELO_PREFER_LOCAL_RANK6=1`,`blending/` 才会优先读取当前仓 `outputs/`
+- 默认模式下 `run_final_repro.sh` 按 `frozen-first` 口径运行,先走历史冻结成员
+- 若设置 `ELO_PREFER_LOCAL_FINAL=1`,`blending/` 才会优先读取当前仓 `outputs/`

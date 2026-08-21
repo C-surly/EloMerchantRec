@@ -13,7 +13,7 @@
 | `src/seq_nn.py` | 训练 `gru_x` 与 `trf` |
 | `src/fuse_final.py` | 生成主链路融合结果 |
 
-## 第六名补充组件
+## 终局补充组件
 
 | 路径 | 作用 |
 | --- | --- |
@@ -31,7 +31,7 @@
 | `src/extras/sk_row.py` | 生成 `base_sk/new_rowreg.npz` |
 | `src/blending/pool_sc5.py` | 生成 `SC5` |
 | `src/blending/pool_union.py` | 生成 `U2` |
-| `src/blending/blend_rank6.py` | 按 `0.6 * U2 + 0.4 * SC5` 导出最终结果 |
+| `src/blending/blend_final.py` | 按 `0.6 * U2 + 0.4 * SC5` 导出最终结果 |
 
 ## 辅助产物
 
@@ -41,11 +41,11 @@
 | `artifacts/card_order.csv` | 最终参考卡序 |
 | `artifacts/f1_pred.npy` | 最终参考预测向量 |
 | `run_all.sh` | 主链路运行入口 |
-| `run_rank6.sh` | 第六名完整运行入口，负责调度 `nn_clf` / `dq` / `tp` / `ct` / `ssl` / `sk` / `SC5` / `U2` |
+| `run_final_repro.sh` | 完整复现运行入口，负责调度 `nn_clf` / `dq` / `tp` / `ct` / `ssl` / `sk` / `SC5` / `U2` |
 
 ## 完整性结论
 
 当前仓库已经从“结果导出仓”升级为“代码复现仓”。`SC5/U2` 所需的 `tp/ct/ssl/sk`
-成员上游脚本现已并入 `src/extras/` 并接入 `run_rank6.sh`。默认复现口径是
-`frozen-first`,用于稳定回到 `3.59428`;若开启 `ELO_PREFER_LOCAL_RANK6=1`,才切到
+成员上游脚本现已并入 `src/extras/` 并接入 `run_final_repro.sh`。默认复现口径是
+`frozen-first`,用于稳定回到 `3.59428`;若开启 `ELO_PREFER_LOCAL_FINAL=1`,才切到
 当前仓现场产物优先的探测模式。
