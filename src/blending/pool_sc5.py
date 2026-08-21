@@ -65,7 +65,7 @@ def main():
     assert "q_clf" in bases, "缺 base_dq/q_clf.npz"
     srcs = {}
     for k, rel in CAND.items():
-        p = paths.resolve_output(rel, prefer_old=not prefer_local)
+        p = paths.resolve_output(rel, prefer_frozen=not prefer_local)
         z = np.load(p)
         assert z["oof"].shape == (len(train),), f"{k} oof 形状不符"
         assert z["pred"].shape == (len(test),), f"{k} pred 形状不符"

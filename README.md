@@ -38,7 +38,7 @@ F1 = 0.6 * U2 + 0.4 * SC5
 ## 默认复现口径
 
 - 默认执行 `bash run_rank6.sh` 走的是 **frozen-first** 口径,目标是稳定复现 `3.59428`
-- 这个口径会优先读取仓内 `external/old_outputs/` 中随仓提供的历史冻结成员
+- 这个口径会优先读取仓内 `external/frozen_members/` 中随仓提供的历史冻结成员
 - 若设置 `ELO_PREFER_LOCAL_RANK6=1`,则切到 **local-first** 探测模式,优先读取当前仓现场产物
 - `local-first` 目前仍是对齐排查模式,还不能保证最终向量继续等于 `3.59428`
 
@@ -92,10 +92,11 @@ bash run_rank6.sh
 
 - `ELO_NN_DEVICE`: `GRU` / `GRU_X` / `NN_CLF` 使用的 GPU，默认 `0`
 - `ELO_TRF_DEVICE`: `Transformer` 使用的 GPU，默认与 `ELO_NN_DEVICE` 相同
-- `ELO_OLD_OUTPUTS_DIR`: 历史成员目录，默认使用仓内 `external/old_outputs`
+- `ELO_FROZEN_MEMBERS_DIR`: 历史冻结成员目录，默认使用仓内 `external/frozen_members`
+- `ELO_OLD_OUTPUTS_DIR`: 旧环境变量别名，仍可用，但不再推荐
 - `ELO_PREFER_LOCAL_RANK6=1`: 让 `SC5/U2` 优先读取当前仓现算成员；默认关闭，以保持冻结口径 `3.59428`
 
-脚本会优先复用已经存在的中间产物，不会重复训练已完成步骤。默认模式下 `SC5/U2` 仍按冻结口径优先读取历史成员；打开 `ELO_PREFER_LOCAL_RANK6=1` 后才切到“当前仓 `outputs/` 优先，`external/old_outputs` 兜底”。
+脚本会优先复用已经存在的中间产物，不会重复训练已完成步骤。默认模式下 `SC5/U2` 仍按冻结口径优先读取历史成员；打开 `ELO_PREFER_LOCAL_RANK6=1` 后才切到“当前仓 `outputs/` 优先，`external/frozen_members` 兜底”。
 
 ## 目录
 
@@ -112,7 +113,7 @@ EloMerchantRec-rank6-release/
 ├── data/
 │   └── processed/.gitkeep
 ├── external/
-│   └── old_outputs/
+│   └── frozen_members/
 ├── outputs/
 │   └── README.md
 ├── src/
@@ -153,6 +154,6 @@ EloMerchantRec-rank6-release/
 - `run_all.sh` 负责生成当前仓主链路产物。
 - `run_rank6.sh` 在主链路基础上继续生成 `nn_clf`、`dq`、`tp/ct/ssl/sk`、`SC5`、`U2` 和最终第六名提交。
 - `src/extras/` 表示主链路之外、终局复现所需的补充组件。
-- `external/old_outputs` 是默认复现口径所需的历史冻结成员输入，不是提交文件仓。
+- `external/frozen_members` 是默认复现口径所需的历史冻结成员输入，不是提交文件仓。
 - 最终提交文件默认写到 `submission/submission_rank6_3.59428.csv.gz`。
 - `artifacts/` 中的参考文件只用于校验最终结果，不参与训练。

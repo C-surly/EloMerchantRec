@@ -8,7 +8,7 @@ FEATURES = ROOT / "data" / "processed" / "features.parquet"
 OUTPUTS = ROOT / "outputs"
 V39 = OUTPUTS / "v39"
 SUBMISSION = ROOT / "submission"
-DEFAULT_OLD_OUTPUTS = ROOT / "external" / "old_outputs"
+DEFAULT_FROZEN_MEMBERS = ROOT / "external" / "frozen_members"
 SC5_CSV = V39 / "submission_v39_best.csv"
 U2_CSV = V39 / "submission_v39b_union.csv"
 REQUIRED = [
@@ -34,11 +34,20 @@ def bootstrap() -> Path:
     return ROOT
 
 
-def old_outputs_dir() -> Path:
-    path = Path(os.environ.get("ELO_OLD_OUTPUTS_DIR", DEFAULT_OLD_OUTPUTS))
+def frozen_members_dir() -> Path:
+    path = Path(
+        os.environ.get(
+            "ELO_FROZEN_MEMBERS_DIR",
+            os.environ.get("ELO_OLD_OUTPUTS_DIR", DEFAULT_FROZEN_MEMBERS),
+        )
+    )
     missing = [rel for rel in REQUIRED if not (path / rel).exists()]
     if missing:
         raise FileNotFoundError(
-            f"缺少旧仓辅助输出目录: {path} | 缺文件: {missing[:5]}"
+            f"缺少冻结成员目录: {path} | 缺文件: {missing[:5]}"
         )
     return path
+
+
+def old_outputs_dir() -> Path:
+    return frozen_members_dir()

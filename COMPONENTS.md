@@ -37,7 +37,7 @@
 
 | 路径 | 作用 |
 | --- | --- |
-| `external/old_outputs/` | `SC5` / `U2` 的历史成员兜底输入；当前仓现算成员存在时不会优先读取这里 |
+| `external/frozen_members/` | `SC5` / `U2` 的历史成员兜底输入；当前仓现算成员存在时不会优先读取这里 |
 | `artifacts/card_order.csv` | 最终参考卡序 |
 | `artifacts/f1_pred.npy` | 最终参考预测向量 |
 | `run_all.sh` | 主链路运行入口 |

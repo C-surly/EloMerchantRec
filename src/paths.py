@@ -27,19 +27,31 @@ def _resolve(env_key: str, default: Path) -> Path:
     return Path(raw).expanduser().resolve() if raw else default
 
 
+def _resolve_any(env_keys: tuple[str, ...], default: Path) -> Path:
+    for key in env_keys:
+        raw = os.environ.get(key)
+        if raw:
+            return Path(raw).expanduser().resolve()
+    return default
+
+
 DATA_DIR = _resolve("ELO_DATA_DIR", ROOT / "data")
 RAW_DIR = _resolve("ELO_RAW_DIR", DATA_DIR / "raw")
 PROC_DIR = _resolve("ELO_PROC_DIR", DATA_DIR / "processed")
 OUT_DIR = _resolve("ELO_OUT_DIR", ROOT / "outputs")
 SUB_DIR = _resolve("ELO_SUB_DIR", ROOT / "submission")
 ARTIFACT_DIR = _resolve("ELO_ARTIFACT_DIR", ROOT / "artifacts")
-OLD_OUT_DIR = _resolve("ELO_OLD_OUTPUTS_DIR", ROOT / "external" / "old_outputs")
+FROZEN_DIR = _resolve_any(
+    ("ELO_FROZEN_MEMBERS_DIR", "ELO_OLD_OUTPUTS_DIR"),
+    ROOT / "external" / "frozen_members",
+)
 
 RAW = str(RAW_DIR)
 PROC = str(PROC_DIR)
 OUTPUTS = str(OUT_DIR)
 SUBMISSION = str(SUB_DIR)
 ARTIFACTS = str(ARTIFACT_DIR)
+FROZEN_MEMBERS = str(FROZEN_DIR)
 
 # 高频固定产物
 FEATURES = str(PROC_DIR / "features.parquet")            # 主特征表
@@ -79,7 +91,7 @@ def artifact(*parts: str) -> str:
 
 # SC5 / U2 可能回退读取的旧仓辅助成员。
 # 当前仓若已现场产出同名文件,会优先使用 outputs/ 下的现算版本。
-OLD_OUTPUTS_REQUIRED = [
+FROZEN_REQUIRED = [
     "base/lgb.npz",
     "base_te/lgb.npz",
     "base_td/lgb.npz",
@@ -94,36 +106,41 @@ OLD_OUTPUTS_REQUIRED = [
 ]
 
 
+def frozen_members_dir() -> Path:
+    """返回冻结成员目录(仅作默认复现口径输入,不强制要求存在)。"""
+    return FROZEN_DIR
+
+
 def old_outputs_dir() -> Path:
-    """返回旧仓辅助输出目录(仅作兜底输入,不强制要求存在)。"""
-    return OLD_OUT_DIR
+    """兼容旧名。"""
+    return frozen_members_dir()
 
 
 def resolve_output(
-    rel: str, *, allow_old: bool = True, require: bool = True, prefer_old: bool = False
+    rel: str, *, allow_frozen: bool = True, require: bool = True, prefer_frozen: bool = False
 ) -> Path:
     """按给定优先级解析成员路径。"""
     cands = [OUT_DIR / rel]
-    if allow_old:
-        cands = [OLD_OUT_DIR / rel, OUT_DIR / rel] if prefer_old else [OUT_DIR / rel, OLD_OUT_DIR / rel]
+    if allow_frozen:
+        cands = [FROZEN_DIR / rel, OUT_DIR / rel] if prefer_frozen else [OUT_DIR / rel, FROZEN_DIR / rel]
     for p in cands:
         if p.exists():
             return p
     if require:
         msg = [str(OUT_DIR / rel)]
-        if allow_old:
-            msg.append(str(OLD_OUT_DIR / rel))
+        if allow_frozen:
+            msg.append(str(FROZEN_DIR / rel))
         raise FileNotFoundError(
             "缺少所需成员产物: " + " | ".join(msg)
         )
     return cands[0]
 
 
-def resolve_output_dir(rel: str, *, allow_old: bool = True) -> Path | None:
-    """按 outputs / old_outputs 顺序探测成员目录。"""
+def resolve_output_dir(rel: str, *, allow_frozen: bool = True) -> Path | None:
+    """按 outputs / frozen_members 顺序探测成员目录。"""
     cands = [OUT_DIR / rel]
-    if allow_old:
-        cands.append(OLD_OUT_DIR / rel)
+    if allow_frozen:
+        cands.append(FROZEN_DIR / rel)
     for p in cands:
         if p.is_dir():
             return p
@@ -131,18 +148,18 @@ def resolve_output_dir(rel: str, *, allow_old: bool = True) -> Path | None:
 
 
 def source_tag(path: Path) -> str:
-    """把解析出的路径标记成 outputs / old_outputs / external。"""
+    """把解析出的路径标记成 outputs / frozen_members / external。"""
     try:
         if path.is_relative_to(OUT_DIR):
             return "outputs"
-        if path.is_relative_to(OLD_OUT_DIR):
-            return "old_outputs"
+        if path.is_relative_to(FROZEN_DIR):
+            return "frozen_members"
     except AttributeError:
         s = str(path)
         if s.startswith(str(OUT_DIR)):
             return "outputs"
-        if s.startswith(str(OLD_OUT_DIR)):
-            return "old_outputs"
+        if s.startswith(str(FROZEN_DIR)):
+            return "frozen_members"
     return "external"
 
 
@@ -175,5 +192,5 @@ if __name__ == "__main__":
     bootstrap()
     for k in ("ROOT", "RAW", "PROC", "OUTPUTS", "SUBMISSION", "ARTIFACTS"):
         print(f"{k:<12} = {globals()[k]}")
-    print(f"{'OLD_OUTPUTS':<12} = {OLD_OUT_DIR}")
+    print(f"{'FROZEN_MEM':<12} = {FROZEN_DIR}")
     print(f"{'FEATURES':<12} = {FEATURES}")

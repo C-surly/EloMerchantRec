@@ -50,7 +50,7 @@ def load_old_f31(prefer_local: bool):
     for d, pre in [("base", ""), ("base_te", "t_"), ("base_td", "d_"),
                    ("base_fm", "f_"), ("base_nn", "n_")]:
         cur = paths.OUT_DIR / d
-        old = paths.old_outputs_dir() / d
+        old = paths.frozen_members_dir() / d
         files = set()
         if prefer_local:
             if cur.is_dir():
@@ -62,7 +62,7 @@ def load_old_f31(prefer_local: bool):
         if not files:
             continue
         for f in sorted(files):
-            p = paths.resolve_output(f"{d}/{f}", prefer_old=not prefer_local)
+            p = paths.resolve_output(f"{d}/{f}", prefer_frozen=not prefer_local)
             z = np.load(p)
             if "oof" in z and "pred" in z:
                 key = "o_" + pre + f[:-4]
@@ -86,7 +86,7 @@ def main():
     bases["z_nnc"] = znnc
     sc_srcs = {}
     for k, rel in SC5_PATH.items():
-        p = paths.resolve_output(rel, prefer_old=not prefer_local)
+        p = paths.resolve_output(rel, prefer_frozen=not prefer_local)
         z = np.load(p)
         bases[k] = (np.asarray(z["oof"], float), np.asarray(z["pred"], float))
         sc_srcs[k] = f"{paths.source_tag(p)}:{p}"
@@ -102,7 +102,7 @@ def main():
         f"取数模式={'local-first' if prefer_local else 'frozen-first'}",
         flush=True,
     )
-    src_sum = {"outputs": 0, "old_outputs": 0, "external": 0}
+    src_sum = {"outputs": 0, "frozen_members": 0, "external": 0}
     for p in old_srcs.values():
         tag = p.split(":", 1)[0]
         src_sum[tag] = src_sum.get(tag, 0) + 1
