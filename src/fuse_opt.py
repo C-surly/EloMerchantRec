@@ -83,7 +83,7 @@ def evaluate_ext(feats, model, bases, y, ybin, folds, p_src, clean_src,
     return rmse(y, oof), oof, pred
 
 
-NNCLF_SEED_PREFIX = "clf_s"   # v15_nn_clf.py 的 seed 分片命名:clf_s<seed>.npz
+NNCLF_SEED_PREFIX = "clf_s"   # nn_clf.py 的 seed 分片命名:clf_s<seed>.npz
 
 
 def load_avg_parts(parts_dir, prefix=NNCLF_SEED_PREFIX):

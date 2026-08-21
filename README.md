@@ -128,8 +128,8 @@ EloMerchantRec-rank6-release/
 │   ├── fuse_final.py
 │   ├── fuse_opt.py
 │   ├── extras/
-│   │   ├── v15_nn_clf.py
-│   │   ├── v16_dq.py
+│   │   ├── nn_clf.py
+│   │   ├── dq.py
 │   │   ├── tx_seq.py
 │   │   ├── tp_lgb.py
 │   │   ├── ct_lgb.py

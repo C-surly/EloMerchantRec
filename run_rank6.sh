@@ -29,13 +29,13 @@ fi
 
 step "2/7 NN outlier 概率头(v15:10 通道序列二分类,5 seed)"
 if trained "$OUT/base_nn_clf/clf.npz"; then skip "nn_clf" "$OUT/base_nn_clf/clf.npz"; else
-  $PY src/extras/v15_nn_clf.py train "$NN_DEVICE"
-  $PY src/extras/v15_nn_clf.py merge
+  $PY src/extras/nn_clf.py train "$NN_DEVICE"
+  $PY src/extras/nn_clf.py merge
 fi
 
 step "3/7 DQ 恶化轨迹世代(v16:q_lgb / q_hub / q_clf / q_clean)"
 if trained "$OUT/base_dq/clf.npz"; then skip "dq" "$OUT/base_dq/clf.npz"; else
-  $PY src/extras/v16_dq.py all
+  $PY src/extras/dq.py all
 fi
 
 step "4/7 终局补充成员(tp/ct/ssl/sk)"

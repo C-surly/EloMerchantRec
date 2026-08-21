@@ -6,8 +6,8 @@
 outlier,与树模型的误差方向天然异构。fusion 已预留 F32/F33 入口:
 outputs/base_nn_clf/clf.npz 存在时自动做 f_clf × NN 概率 rank 集成。
 产物:outputs/nn_clf_parts/clf_s<seed>.npz;平均后 outputs/base_nn_clf/clf.npz。
-用法:ELO_SEED=777 python src/extras/v15_nn_clf.py train <dev_id> [seeds,逗号分隔]
-     ELO_SEED=777 python src/extras/v15_nn_clf.py merge   # 平均 parts 并落盘成员
+用法:ELO_SEED=777 python src/extras/nn_clf.py train <dev_id> [seeds,逗号分隔]
+     ELO_SEED=777 python src/extras/nn_clf.py merge   # 平均 parts 并落盘成员
 """
 import os
 import sys

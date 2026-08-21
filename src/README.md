@@ -20,8 +20,8 @@
 
 | 脚本 | 职责 |
 |---|---|
-| `extras/v15_nn_clf.py` | 训练 `nn_clf_parts` 与 `base_nn_clf/clf.npz` |
-| `extras/v16_dq.py` | 训练 `base_dq` 系列成员 |
+| `extras/nn_clf.py` | 训练 `nn_clf_parts` 与 `base_nn_clf/clf.npz` |
+| `extras/dq.py` | 训练 `base_dq` 系列成员 |
 | `extras/tx_seq.py` | 生成 `ssl` 系列依赖的交易级序列缓存 |
 | `extras/tp_lgb.py` | 生成 `tp_lgb` |
 | `extras/ct_lgb.py` / `extras/ct_gen.py` | 生成 `ct` 家族回归成员 |

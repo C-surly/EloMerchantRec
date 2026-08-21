@@ -6,7 +6,7 @@
 
 - `base/`, `base_te/`, `base_td/`, `base_fm/`, `base_nn/`: 主链路各世代 OOF/test 产物
 - `base_nn_clf/`, `base_dq/`: 第六名补充成员
-- `nn_clf_parts/`: `v15_nn_clf.py` 的 seed 分片
+- `nn_clf_parts/`: `nn_clf.py` 的 seed 分片
 - `v39/`: `SC5`、`U2` 及其配置结果
 - `logs/`: 训练与融合日志
 

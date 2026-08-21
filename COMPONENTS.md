@@ -17,8 +17,8 @@
 
 | 路径 | 作用 |
 | --- | --- |
-| `src/extras/v15_nn_clf.py` | 训练 `nn_clf_parts` 并合并为 `base_nn_clf/clf.npz` |
-| `src/extras/v16_dq.py` | 训练 `base_dq` 系列成员 |
+| `src/extras/nn_clf.py` | 训练 `nn_clf_parts` 并合并为 `base_nn_clf/clf.npz` |
+| `src/extras/dq.py` | 训练 `base_dq` 系列成员 |
 | `src/extras/tx_seq.py` | 生成 `ssl` 系列所需的 `tx_tensor.npz` 交易级序列缓存 |
 | `src/extras/tp_lgb.py` | 生成 `base_tp/lgb.npz` |
 | `src/extras/ct_lgb.py` | 生成 `base_ct/lgb.npz` 与数字结构特征缓存 |

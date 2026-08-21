@@ -9,9 +9,9 @@
      输出到 outputs/base_dq/ , 无缝接入 fusion 中的 F36/F37。
 
 用法:
-  ELO_SEED=777 python src/extras/v16_dq.py all
-  ELO_SEED=777 python src/extras/v16_dq.py clf
-  ELO_SEED=777 python src/extras/v16_dq.py fuse
+  ELO_SEED=777 python src/extras/dq.py all
+  ELO_SEED=777 python src/extras/dq.py clf
+  ELO_SEED=777 python src/extras/dq.py fuse
 """
 import os
 import sys
@@ -34,7 +34,7 @@ import formula as v11
 import fusion as vf
 
 OUT_DIR = paths.out("base_dq")
-SUB_OUT = paths.out("submission_v16_dq.csv")
+SUB_OUT = paths.out("submission_dq.csv")
 TOP_BASE = int(os.environ.get("ELO_DQ_BASE_TOP", 160))
 TOP_SEL = int(os.environ.get("ELO_DQ_SEL_TOP", 128))
 rmse = lambda a, b: float(np.sqrt(mean_squared_error(a, b)))
