@@ -15,8 +15,8 @@ paths.bootstrap()
 import elo_pipeline as ep
 import formula as v11
 import fusion as vf
-from archive.tp_lgb import build_timeres
-from archive.ct_lgb import build_ct, load_te
+from extras.tp_lgb import build_timeres
+from extras.ct_lgb import build_ct, load_te
 
 t0 = time.time()
 

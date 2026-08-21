@@ -16,7 +16,7 @@ paths.bootstrap()
 import elo_pipeline as ep
 import formula as v11
 import fusion as vf
-from archive.ct_lgb import build_ct, load_te
+from extras.ct_lgb import build_ct, load_te
 
 rmse = lambda a, b: float(np.sqrt(mean_squared_error(a, b)))
 t0 = time.time()

@@ -9,9 +9,9 @@
      输出到 outputs/base_dq/ , 无缝接入 fusion 中的 F36/F37。
 
 用法:
-  ELO_SEED=777 python src/archive/v16_dq.py all
-  ELO_SEED=777 python src/archive/v16_dq.py clf
-  ELO_SEED=777 python src/archive/v16_dq.py fuse
+  ELO_SEED=777 python src/extras/v16_dq.py all
+  ELO_SEED=777 python src/extras/v16_dq.py clf
+  ELO_SEED=777 python src/extras/v16_dq.py fuse
 """
 import os
 import sys

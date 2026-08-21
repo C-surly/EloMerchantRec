@@ -120,7 +120,7 @@ def resolve_output(
 
 
 def resolve_output_dir(rel: str, *, allow_old: bool = True) -> Path | None:
-    """按“当前仓 outputs 优先, old_outputs 兜底”解析成员目录。"""
+    """按 outputs / old_outputs 顺序探测成员目录。"""
     cands = [OUT_DIR / rel]
     if allow_old:
         cands.append(OLD_OUT_DIR / rel)

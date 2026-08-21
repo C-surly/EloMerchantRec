@@ -35,6 +35,13 @@ F1 = 0.6 * U2 + 0.4 * SC5
 - Kaggle Elo 原始数据 `data/raw/*.csv`
 - 足够的运行时间和硬件资源
 
+## 默认复现口径
+
+- 默认执行 `bash run_rank6.sh` 走的是 **frozen-first** 口径,目标是稳定复现 `3.59428`
+- 这个口径会优先读取仓内 `external/old_outputs/` 中随仓提供的历史冻结成员
+- 若设置 `ELO_PREFER_LOCAL_RANK6=1`,则切到 **local-first** 探测模式,优先读取当前仓现场产物
+- `local-first` 目前仍是对齐排查模式,还不能保证最终向量继续等于 `3.59428`
+
 ## 环境
 
 ```bash
@@ -120,7 +127,7 @@ EloMerchantRec-rank6-release/
 │   ├── fusion.py
 │   ├── fuse_final.py
 │   ├── fuse_opt.py
-│   ├── archive/
+│   ├── extras/
 │   │   ├── v15_nn_clf.py
 │   │   ├── v16_dq.py
 │   │   ├── tx_seq.py
@@ -145,6 +152,7 @@ EloMerchantRec-rank6-release/
 
 - `run_all.sh` 负责生成当前仓主链路产物。
 - `run_rank6.sh` 在主链路基础上继续生成 `nn_clf`、`dq`、`tp/ct/ssl/sk`、`SC5`、`U2` 和最终第六名提交。
-- `external/old_outputs` 现在只承担历史成员兜底输入，不再是 `SC5/U2` 的唯一来源。
+- `src/extras/` 表示主链路之外、终局复现所需的补充组件。
+- `external/old_outputs` 是默认复现口径所需的历史冻结成员输入，不是提交文件仓。
 - 最终提交文件默认写到 `submission/submission_rank6_3.59428.csv.gz`。
 - `artifacts/` 中的参考文件只用于校验最终结果，不参与训练。

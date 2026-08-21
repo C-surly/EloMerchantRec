@@ -5,9 +5,9 @@
 数值 7 + 类别 emb(品类/行业),GRU 直接回归 target。静态分支复用月序列侧的瘦静态。
 
 用法:
-  ELO_SEED=777 python src/archive/tx_seq.py data
-  ELO_SEED=777 python src/archive/tx_seq.py train <dev_id> <seeds逗号>
-  ELO_SEED=777 python src/archive/tx_seq.py merge
+  ELO_SEED=777 python src/extras/tx_seq.py data
+  ELO_SEED=777 python src/extras/tx_seq.py train <dev_id> <seeds逗号>
+  ELO_SEED=777 python src/extras/tx_seq.py merge
 """
 import os
 import sys
