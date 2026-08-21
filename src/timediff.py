@@ -29,9 +29,11 @@ from sklearn.metrics import mean_squared_error
 
 import elo_pipeline as ep
 
-TD_CACHE = "outputs/td_features.parquet"
-OUT_DIR = "outputs/base_td"
-REF_LGB = "outputs/base_te/lgb.npz"     # 判据基线:sel + TE-v1 单模
+import paths
+
+TD_CACHE = paths.out("td_features.parquet")
+OUT_DIR = paths.out("base_td")
+REF_LGB = paths.out("base_te", "lgb.npz")     # 判据基线:sel + TE-v1 单模
 rmse = lambda a, b: float(np.sqrt(mean_squared_error(a, b)))
 t0 = time.time()
 
@@ -84,7 +86,7 @@ def build_td() -> pd.DataFrame:
 
 def load_te(n_expect=36):
     """读 v6 TE-v1 缓存(36 列折外 outlier 率编码),口径与折划分和本脚本一致。"""
-    for p in ("outputs/te_features_v1.npz", "outputs/te_features.npz"):
+    for p in (paths.out("te_features_v1.npz"), paths.out("te_features.npz")):
         if os.path.exists(p):
             z = np.load(p, allow_pickle=True)
             names = [str(x) for x in z["names"]]
@@ -101,12 +103,12 @@ def main():
     if mode == "feat":
         return
 
-    base = pd.read_parquet("data/processed/features.parquet")
+    base = pd.read_parquet(paths.FEATURES)
     train = base[base["is_train"] == 1].reset_index(drop=True)
     test = base[base["is_train"] == 0].reset_index(drop=True)
     y = train["target"]
     folds = ep.make_folds(y)
-    imp = pd.read_csv("outputs/feature_importance.csv")
+    imp = pd.read_csv(paths.FEATURE_IMPORTANCE)
     sel = [c for c in imp[imp["gain"] > 0].head(ep.CONFIG["TOP_K"])["feature"] if c in train.columns]
     te_tr, te_te, te_names = load_te()
     X = pd.concat([train[sel].reset_index(drop=True), pd.DataFrame(te_tr, columns=te_names)], axis=1)

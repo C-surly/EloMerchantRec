@@ -18,9 +18,11 @@ from sklearn.metrics import mean_squared_error
 import elo_pipeline as ep
 import seq_gru as v13
 
-PARTS_DIR = "outputs/nn_parts"
-OUT_DIR = "outputs/base_nn"
-SEQX_CACHE = "outputs/seq_tensor_ext.npz"
+import paths
+
+PARTS_DIR = paths.out("nn_parts")
+OUT_DIR = paths.out("base_nn")
+SEQX_CACHE = paths.out("seq_tensor_ext.npz")
 SEEDS = [777, 1777, 2777, 3777, 4777]
 ARCH_OUT = {"gru": "gru", "gru_x": "gru_x", "trf": "trf"}
 LAGS = v13.LAGS
@@ -34,7 +36,7 @@ def log(msg):
 
 def build_seq_ext():
     """10 通道版:v13 的 7 通道 + 被拒逐月笔数/占比 + 城市广度。"""
-    base = pd.read_parquet("data/processed/features.parquet")
+    base = pd.read_parquet(paths.FEATURES)
     cols = ["card_id", "month_lag", "purchase_amount", "merchant_id",
             "installments", "category_1", "city_id", "authorized_flag"]
     hist = ep.clean_transactions(ep.load_transactions("historical_transactions.csv"))[cols]
@@ -103,7 +105,7 @@ def train(arch, dev_id, seeds):
             log(f"[{arch}] 检测到 cuDNN RNN 初始化失败,自动切换到原生 CUDA GRU 后端")
     z = np.load(SEQX_CACHE if arch == "gru_x" else v13.SEQ_CACHE)
     xs_tr, st_tr, xs_te, st_te = z["xs_tr"], z["st_tr"], z["xs_te"], z["st_te"]
-    base = pd.read_parquet("data/processed/features.parquet")
+    base = pd.read_parquet(paths.FEATURES)
     y = base[base["is_train"] == 1].reset_index(drop=True)["target"]
     folds = ep.make_folds(y)
     yv = y.to_numpy(np.float32)

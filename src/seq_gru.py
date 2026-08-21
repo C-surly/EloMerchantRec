@@ -16,8 +16,10 @@ from sklearn.metrics import mean_squared_error
 
 import elo_pipeline as ep
 
-SEQ_CACHE = "outputs/seq_tensor.npz"
-OUT_DIR = "outputs/base_nn"
+import paths
+
+SEQ_CACHE = paths.out("seq_tensor.npz")
+OUT_DIR = paths.out("base_nn")
 LAGS = list(range(-13, 3))          # 16 步
 STATIC = ["feature_1", "feature_2", "feature_3", "elapsed_days", "n_months"]
 rmse = lambda a, b: float(np.sqrt(mean_squared_error(a, b)))
@@ -30,7 +32,7 @@ def log(msg):
 
 def build_seq():
     """月度序列张量,按 features.parquet 的 train/test card 顺序对齐。"""
-    base = pd.read_parquet("data/processed/features.parquet")
+    base = pd.read_parquet(paths.FEATURES)
     cols = ["card_id", "month_lag", "purchase_amount", "merchant_id", "installments", "category_1"]
     hist = ep.clean_transactions(ep.load_transactions("historical_transactions.csv"))
     hist = hist[hist["authorized_flag"] == 1][cols]
@@ -94,7 +96,7 @@ def train():
     z = np.load(SEQ_CACHE)
     xs_tr, st_tr = z["xs_tr"], z["st_tr"]
     xs_te, st_te = z["xs_te"], z["st_te"]
-    base = pd.read_parquet("data/processed/features.parquet")
+    base = pd.read_parquet(paths.FEATURES)
     y = base[base["is_train"] == 1].reset_index(drop=True)["target"]
     folds = ep.make_folds(y)
     yv = y.to_numpy(np.float32)

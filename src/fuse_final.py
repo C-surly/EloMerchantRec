@@ -14,6 +14,10 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import paths
+
+paths.bootstrap()
+
 import elo_pipeline as ep
 import fusion as vf
 
@@ -21,7 +25,7 @@ import fusion as vf
 def main():
     assert os.environ.get("ELO_SEED") == "777", "必须 ELO_SEED=777 运行(折协议纪律)"
     bases = vf.load_bases()
-    base = pd.read_parquet("data/processed/features.parquet")
+    base = pd.read_parquet(paths.FEATURES)
     train = base[base["is_train"] == 1].reset_index(drop=True)
     y = train["target"]
     ybin = (y < -30).astype(int).to_numpy()
@@ -38,10 +42,10 @@ def main():
     r, _, pred = vf.evaluate(allf, "bayes", bases, y, ybin, folds,
                              p_src="f_clf", clean_src="f_clean")
     print(f"F31 OOF = {r:.5f}(参考值 3.62062;线上 Private 3.59764)")
-    sub = pd.read_csv("data/raw/sample_submission.csv")
+    sub = pd.read_csv(paths.raw("sample_submission.csv"))
     sub["target"] = pred
     os.makedirs("submission", exist_ok=True)
-    sub.to_csv("submission/submission_v14_repro.csv", index=False)
+    sub.to_csv(paths.sub("submission_v14_repro.csv"), index=False)
     print("已生成 submission/submission_v14_repro.csv")
 
 

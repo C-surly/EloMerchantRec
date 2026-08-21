@@ -22,7 +22,9 @@ import elo_pipeline as ep
 import fusion as vf
 
 rmse = vf.rmse
-NNCLF_PARTS_DIR = "outputs/nn_clf_parts"
+import paths
+
+NNCLF_PARTS_DIR = paths.out("nn_clf_parts")
 
 
 def derive_multi(tr, va, bases, ybin, p_src, clean_src, kind):
@@ -81,11 +83,20 @@ def evaluate_ext(feats, model, bases, y, ybin, folds, p_src, clean_src,
     return rmse(y, oof), oof, pred
 
 
-def load_avg_parts(parts_dir):
-    """把同协议 seed 分片平均成一个原始弱特征。"""
+NNCLF_SEED_PREFIX = "clf_s"   # v15_nn_clf.py 的 seed 分片命名:clf_s<seed>.npz
+
+
+def load_avg_parts(parts_dir, prefix=NNCLF_SEED_PREFIX):
+    """把同协议 seed 分片平均成一个原始弱特征。
+
+    只收 `prefix` 开头的分片:nn_clf_parts/ 历史上还落过别的实验产物
+    (如自监督缩放实验的 ssl_scale_clf.npz),若一并平均进来,z_nnc 会静默改口径,
+    SC5/U2/F1 全线跟着漂 —— 曾实测把 SC5 OOF 从 3.61996 推到 3.62003。
+    """
     if not os.path.isdir(parts_dir):
         return [], None
-    files = sorted(f for f in os.listdir(parts_dir) if f.endswith(".npz"))
+    files = sorted(f for f in os.listdir(parts_dir)
+                   if f.endswith(".npz") and f.startswith(prefix))
     if not files:
         return [], None
     zs = [np.load(os.path.join(parts_dir, f)) for f in files]
@@ -190,7 +201,7 @@ def evaluate_blend(feats, bases, y, ybin, folds, p_src, clean_src,
 def main():
     assert os.environ.get("ELO_SEED") == "777", "必须 ELO_SEED=777 运行(折协议纪律)"
     bases = vf.load_bases()
-    base = pd.read_parquet("data/processed/features.parquet")
+    base = pd.read_parquet(paths.FEATURES)
     train = base[base["is_train"] == 1].reset_index(drop=True)
     test = base[base["is_train"] == 0].reset_index(drop=True)
     y = train["target"]
@@ -308,7 +319,7 @@ def main():
     print(f"\n[opt] 最优 {best['exp']} OOF={best['oof']:.5f} vs 基线 {base_oof:.5f} "
           f"→ {best['oof'] - base_oof:+.5f}", flush=True)
     if best["oof"] < base_oof:
-        out = "outputs/submission_v15_opt.csv"
+        out = paths.out("submission_v15_opt.csv")
         pd.DataFrame({"card_id": test["card_id"], "target": preds[best["exp"]]}
                      ).to_csv(out, index=False)
         print(f"[opt] 保存 {out}", flush=True)

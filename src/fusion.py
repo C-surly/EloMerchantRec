@@ -27,8 +27,9 @@ from sklearn.metrics import mean_squared_error
 from scipy.optimize import minimize
 
 import elo_pipeline as ep
+import paths
 
-BASE_DIR = "outputs/base"
+BASE_DIR = paths.out("base")
 OUTLIER = ep.CONFIG["OUTLIER_TARGET"]
 rmse = lambda a, b: float(np.sqrt(mean_squared_error(a, b)))
 
@@ -184,7 +185,7 @@ def alpha_blend_baseline(bases, y, folds, gbdt):
 def main():
     bases = load_bases()
     print(f"[fusion] 基模型池:{sorted(bases)}", flush=True)
-    base_tbl = pd.read_parquet("data/processed/features.parquet")
+    base_tbl = pd.read_parquet(paths.FEATURES)
     train = base_tbl[base_tbl["is_train"] == 1].reset_index(drop=True)
     test = base_tbl[base_tbl["is_train"] == 0].reset_index(drop=True)
     y = train["target"]
@@ -302,7 +303,7 @@ def main():
                       f"  NN成员={NREG}", flush=True)
 
             # ---- v15:outlier 概率 NN 化(f_clf 与序列 NN 概率 rank 平均为新 p 源)----
-            nnc = "outputs/base_nn_clf/clf.npz"
+            nnc = paths.out("base_nn_clf", "clf.npz")
             if os.path.exists(nnc):
                 from scipy.stats import rankdata
                 zc = np.load(nnc)
@@ -379,13 +380,13 @@ def main():
           f"vs v4 现役 {r_alpha:.5f} → 改善 {gain:+.5f}", flush=True)
     print(f"[fusion] 按 -0.031 偏移推算 Private ≈ {best['oof'] - 0.031:.5f}", flush=True)
 
-    out = os.environ.get("ELO_FUSION_OUT", "outputs/submission_v5_fusion.csv")
+    out = os.environ.get("ELO_FUSION_OUT", paths.out("submission_v5_fusion.csv"))
     pd.DataFrame({"card_id": test["card_id"], "target": preds[best["plan"]]}).to_csv(out, index=False)
     desc = f"v5 fusion [{best['plan']}] {best['model']}, OOF {best['oof']:.5f}"
-    open("outputs/v5_fusion_desc.txt", "w").write(desc)
+    open(paths.out("v5_fusion_desc.txt"), "w").write(desc)
     json.dump({"table": rows, "alpha_baseline": {"alpha": a_best, "oof": r_alpha},
                "pure_stack_oof": rmse_st, "best": best.to_dict()},
-              open("outputs/v5_fusion_report.json", "w"), indent=2, ensure_ascii=False)
+              open(paths.out("v5_fusion_report.json"), "w"), indent=2, ensure_ascii=False)
     print(f"[fusion] 保存 {out}({desc})", flush=True)
 
 

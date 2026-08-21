@@ -17,12 +17,18 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
+# 允许 `python src/<子目录>/xxx.py` 直接执行:先把 src/ 挂进 sys.path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import paths
+
+paths.bootstrap()
+
 import elo_pipeline as ep
 import seq_gru as v13
 import seq_nn as v14
 
-PARTS_DIR = "outputs/nn_clf_parts"
-OUT_DIR = "outputs/base_nn_clf"
+PARTS_DIR = paths.out("nn_clf_parts")
+OUT_DIR = paths.out("base_nn_clf")
 SEEDS = [777, 1777, 2777, 3777, 4777]
 t0 = time.time()
 
@@ -37,7 +43,7 @@ def train(dev_id, seeds):
     dev = f"cuda:{dev_id}" if torch.cuda.is_available() else "cpu"
     z = np.load(v14.SEQX_CACHE)
     xs_tr, st_tr, xs_te, st_te = z["xs_tr"], z["st_tr"], z["xs_te"], z["st_te"]
-    base = pd.read_parquet("data/processed/features.parquet")
+    base = pd.read_parquet(paths.FEATURES)
     y = base[base["is_train"] == 1].reset_index(drop=True)["target"]
     folds = ep.make_folds(y)
     ybin = (y < -30).astype(np.float32).to_numpy()
@@ -106,7 +112,7 @@ def train(dev_id, seeds):
 
 
 def merge():
-    base = pd.read_parquet("data/processed/features.parquet")
+    base = pd.read_parquet(paths.FEATURES)
     y = base[base["is_train"] == 1].reset_index(drop=True)["target"]
     ybin = (y < -30).astype(int).to_numpy()
     zs = [np.load(os.path.join(PARTS_DIR, f)) for f in sorted(os.listdir(PARTS_DIR))

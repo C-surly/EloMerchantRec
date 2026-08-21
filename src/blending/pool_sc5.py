@@ -17,34 +17,41 @@
 """
 import json
 import os
+import sys
 
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 
+# 允许 `python src/<子目录>/xxx.py` 直接执行:先把 src/ 挂进 sys.path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import paths
+
+paths.bootstrap()
+
 import elo_pipeline as ep
 import fusion as vf
 import fuse_opt as v15
-from blending.paths import old_outputs_dir
 
 rmse = vf.rmse
-OLD = str(old_outputs_dir())
+SC5_OUT = paths.SC5_CSV
 CAND = {
-    "ct_lgb": f"{OLD}/base_ct/lgb.npz",
-    "ct_clf": f"{OLD}/base_ct/clf_ct.npz",
-    "tp_pfn": f"{OLD}/base_tp/pfn.npz",
-    "tp_lgb": f"{OLD}/base_tp/lgb.npz",
-    "sk_row": f"{OLD}/base_sk/new_rowreg.npz",
-    "ssl_dn": f"{OLD}/base_nn_clf/ssl_dn_clf.npz",
-    "ssl_full": f"{OLD}/base_nn_clf/ssl_full_clf.npz",
-    "ssl_clf": f"{OLD}/base_nn_clf/ssl_clf.npz",
+    "ct_lgb": "base_ct/lgb.npz",
+    "ct_clf": "base_ct/clf_ct.npz",
+    "tp_pfn": "base_tp/pfn.npz",
+    "tp_lgb": "base_tp/lgb.npz",
+    "sk_row": "base_sk/new_rowreg.npz",
+    "ssl_dn": "base_nn_clf/ssl_dn_clf.npz",
+    "ssl_full": "base_nn_clf/ssl_full_clf.npz",
+    "ssl_clf": "base_nn_clf/ssl_clf.npz",
 }
 
 
 def main():
     assert os.environ.get("ELO_SEED") == "777", "必须 ELO_SEED=777 运行(折协议纪律)"
+    prefer_local = os.environ.get("ELO_PREFER_LOCAL_RANK6", "0") == "1"
     bases = vf.load_bases()
-    base = pd.read_parquet("data/processed/features.parquet")
+    base = pd.read_parquet(paths.FEATURES)
     train = base[base["is_train"] == 1].reset_index(drop=True)
     test = base[base["is_train"] == 0].reset_index(drop=True)
     y = train["target"]
@@ -56,12 +63,21 @@ def main():
     assert znnc is not None, "缺 nn_clf_parts"
     bases["z_nnc"] = znnc
     assert "q_clf" in bases, "缺 base_dq/q_clf.npz"
-    for k, p in CAND.items():
+    srcs = {}
+    for k, rel in CAND.items():
+        p = paths.resolve_output(rel, prefer_old=not prefer_local)
         z = np.load(p)
         assert z["oof"].shape == (len(train),), f"{k} oof 形状不符"
         assert z["pred"].shape == (len(test),), f"{k} pred 形状不符"
         bases[k] = (np.asarray(z["oof"], float), np.asarray(z["pred"], float))
-    print(f"[v39] z_nnc 成员={members};旧仓成员={list(CAND)}", flush=True)
+        srcs[k] = f"{paths.source_tag(p)}:{p}"
+    print(
+        f"[v39] z_nnc 成员={members};候选成员={list(CAND)}; "
+        f"取数模式={'local-first' if prefer_local else 'frozen-first'}",
+        flush=True,
+    )
+    for k in CAND:
+        print(f"[v39]   {k:<8} <- {srcs[k]}", flush=True)
 
     REG = ["lgb", "xgb", "cat", "hub", "mlp", "mlp2", "et"]
     allf = (REG + ["t_lgb", "t_xgb", "t_cat", "t_hub"]
@@ -131,21 +147,20 @@ def main():
     print(f"\n[v39] 最优 {best['exp']} OOF={best['oof']:.5f} vs E10 {g0:.5f} "
           f"→ {best['oof'] - g0:+.5f}(判据线 -0.00050)", flush=True)
 
-    os.makedirs("outputs/v39", exist_ok=True)
-    with open("outputs/v39/results.json", "w") as f:
+    os.makedirs(paths.V39, exist_ok=True)
+    with open(os.path.join(paths.V39, "results.json"), "w") as f:
         json.dump(rows, f, ensure_ascii=False, indent=2)
-    np.savez("outputs/v39/G0_e10.npz", oof=oofs["G0 E10复现"], pred=preds["G0 E10复现"])
+    np.savez(os.path.join(paths.V39, "G0_e10.npz"), oof=oofs["G0 E10复现"], pred=preds["G0 E10复现"])
     if best["exp"] != "G0 E10复现" and best["oof"] < g0:
-        np.savez("outputs/v39/best.npz", oof=oofs[best["exp"]], pred=preds[best["exp"]])
+        np.savez(os.path.join(paths.V39, "best.npz"), oof=oofs[best["exp"]], pred=preds[best["exp"]])
         pd.DataFrame({"card_id": test["card_id"],
                       "target": preds[best["exp"]]}
-                     ).to_csv("outputs/v39/submission_v39_best.csv", index=False)
-        with open("outputs/v39/best_config.json", "w") as f:
+                     ).to_csv(SC5_OUT, index=False)
+        with open(os.path.join(paths.V39, "best_config.json"), "w") as f:
             json.dump(dict(exp=str(best["exp"]), oof=float(best["oof"]),
                            delta_vs_e10=float(best["oof"] - g0)), f,
                       ensure_ascii=False, indent=2)
-        print("[v39] 已保存 outputs/v39/submission_v39_best.csv(提交与否按判据另行决策)",
-              flush=True)
+        print(f"[v39] 已保存 {SC5_OUT}(提交与否按判据另行决策)", flush=True)
 
 
 if __name__ == "__main__":

@@ -26,7 +26,9 @@ from sklearn.preprocessing import QuantileTransformer
 
 import elo_pipeline as ep
 
-BASE_DIR = "outputs/base"
+import paths
+
+BASE_DIR = paths.out("base")
 rmse = lambda a, b: float(np.sqrt(mean_squared_error(a, b)))
 t0 = time.time()
 
@@ -36,11 +38,11 @@ def log(msg):
 
 
 def load_data():
-    base = pd.read_parquet("data/processed/features.parquet")
+    base = pd.read_parquet(paths.FEATURES)
     train = base[base["is_train"] == 1].reset_index(drop=True)
     test = base[base["is_train"] == 0].reset_index(drop=True)
     y = train["target"]
-    imp = pd.read_csv("outputs/feature_importance.csv")
+    imp = pd.read_csv(paths.FEATURE_IMPORTANCE)
     selected = [c for c in imp[imp["gain"] > 0].head(ep.CONFIG["TOP_K"])["feature"]
                 if c in train.columns]
     return train[selected], test[selected], y, ep.make_folds(y)

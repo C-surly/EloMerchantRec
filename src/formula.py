@@ -24,9 +24,11 @@ from sklearn.metrics import mean_squared_error
 
 import elo_pipeline as ep
 
-OUT_DIR = "outputs/base_fm"
-REF_LGB = "outputs/base_td/lgb.npz"
-HL_CACHE = "outputs/hist_lag_amt.parquet"   # 历史逐月金额(强化分母用)
+import paths
+
+OUT_DIR = paths.out("base_fm")
+REF_LGB = paths.out("base_td", "lgb.npz")
+HL_CACHE = paths.out("hist_lag_amt.parquet")   # 历史逐月金额(强化分母用)
 EPS = 1e-10
 rmse = lambda a, b: float(np.sqrt(mean_squared_error(a, b)))
 t0 = time.time()
@@ -99,7 +101,7 @@ def formula_block(df: pd.DataFrame) -> pd.DataFrame:
 def main():
     assert os.environ.get("ELO_SEED") == "777", "必须 ELO_SEED=777 运行(折协议纪律)"
     mode = sys.argv[1] if len(sys.argv) > 1 else "lgb"
-    base = pd.read_parquet("data/processed/features.parquet")
+    base = pd.read_parquet(paths.FEATURES)
     hl = hist_lag_amt()
     base = base.merge(hl, on="card_id", how="left")
     train = base[base["is_train"] == 1].reset_index(drop=True)
@@ -113,11 +115,11 @@ def main():
         s_all = spearmanr(fm_tr[c], y).statistic
         s_ok = spearmanr(fm_tr[c][ok], y[ok]).statistic
         log(f"  {c:14s} {s_all:+.4f} | {s_ok:+.4f}")
-    imp = pd.read_csv("outputs/feature_importance.csv")
+    imp = pd.read_csv(paths.FEATURE_IMPORTANCE)
     sel = [c for c in imp[imp["gain"] > 0].head(ep.CONFIG["TOP_K"])["feature"] if c in train.columns]
-    z = np.load("outputs/te_features_v1.npz", allow_pickle=True)
+    z = np.load(paths.out("te_features_v1.npz"), allow_pickle=True)
     te_names = [str(x) for x in z["names"]]
-    td = pd.read_parquet("outputs/td_features.parquet")
+    td = pd.read_parquet(paths.out("td_features.parquet"))
 
     def assemble(side, zte, fm):
         m1 = side[["card_id"]].merge(td, on="card_id", how="left").drop(columns="card_id")

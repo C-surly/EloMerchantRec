@@ -23,12 +23,18 @@ import pandas as pd
 from sklearn.metrics import mean_squared_error, roc_auc_score
 from sklearn.model_selection import StratifiedKFold
 
+# 允许 `python src/<子目录>/xxx.py` 直接执行:先把 src/ 挂进 sys.path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import paths
+
+paths.bootstrap()
+
 import elo_pipeline as ep
 import formula as v11
 import fusion as vf
 
-OUT_DIR = "outputs/base_dq"
-SUB_OUT = "outputs/submission_v16_dq.csv"
+OUT_DIR = paths.out("base_dq")
+SUB_OUT = paths.out("submission_v16_dq.csv")
 TOP_BASE = int(os.environ.get("ELO_DQ_BASE_TOP", 160))
 TOP_SEL = int(os.environ.get("ELO_DQ_SEL_TOP", 128))
 rmse = lambda a, b: float(np.sqrt(mean_squared_error(a, b)))
@@ -115,7 +121,7 @@ def build_dq(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def load_te():
-    for p in ("outputs/te_features.npz", "outputs/te_features_v1.npz"):
+    for p in (paths.out("te_features.npz"), paths.out("te_features_v1.npz")):
         if os.path.exists(p):
             z = np.load(p, allow_pickle=True)
             return z["tr"], z["te"], [str(x) for x in z["names"]]
@@ -123,12 +129,12 @@ def load_te():
 
 
 def assemble():
-    base = pd.read_parquet("data/processed/features.parquet")
+    base = pd.read_parquet(paths.FEATURES)
     train = base[base["is_train"] == 1].reset_index(drop=True)
     test = base[base["is_train"] == 0].reset_index(drop=True)
     y = train["target"]
 
-    imp = pd.read_csv("outputs/feature_importance.csv")
+    imp = pd.read_csv(paths.FEATURE_IMPORTANCE)
     top_base = [c for c in imp[imp["gain"] > 0].head(TOP_BASE)["feature"] if c in train.columns]
 
     dq_tr = build_dq(train)
@@ -145,7 +151,7 @@ def assemble():
         desc.append(f"TE {len(te_names)}")
 
     if os.environ.get("ELO_DQ_USE_TD", "1") == "1":
-        td = pd.read_parquet("outputs/td_features.parquet")
+        td = pd.read_parquet(paths.out("td_features.parquet"))
         td_tr = train[["card_id"]].merge(td, on="card_id", how="left").drop(columns="card_id")
         td_te = test[["card_id"]].merge(td, on="card_id", how="left").drop(columns="card_id")
         blocks_tr.append(td_tr.astype(np.float32).reset_index(drop=True))
@@ -243,7 +249,7 @@ def dump(name, y, oof, pred):
 
 def focused_fusion():
     bases = vf.load_bases()
-    base_tbl = pd.read_parquet("data/processed/features.parquet")
+    base_tbl = pd.read_parquet(paths.FEATURES)
     train = base_tbl[base_tbl["is_train"] == 1].reset_index(drop=True)
     test = base_tbl[base_tbl["is_train"] == 0].reset_index(drop=True)
     y = train["target"]

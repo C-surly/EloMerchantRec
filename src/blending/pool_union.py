@@ -18,46 +18,64 @@
 """
 import json
 import os
+import sys
 
 import numpy as np
 import pandas as pd
 
+# 允许 `python src/<子目录>/xxx.py` 直接执行:先把 src/ 挂进 sys.path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import paths
+
+paths.bootstrap()
+
 import elo_pipeline as ep
 import fusion as vf
 import fuse_opt as v15
-from blending.paths import old_outputs_dir
 
 rmse = vf.rmse
-OLD = str(old_outputs_dir())
+U2_OUT = paths.U2_CSV
 SC5 = ["ct_lgb", "ct_clf", "tp_pfn", "tp_lgb", "sk_row", "ssl_dn"]
 SC5_PATH = {
-    "ct_lgb": f"{OLD}/base_ct/lgb.npz", "ct_clf": f"{OLD}/base_ct/clf_ct.npz",
-    "tp_pfn": f"{OLD}/base_tp/pfn.npz", "tp_lgb": f"{OLD}/base_tp/lgb.npz",
-    "sk_row": f"{OLD}/base_sk/new_rowreg.npz", "ssl_dn": f"{OLD}/base_nn_clf/ssl_dn_clf.npz",
+    "ct_lgb": "base_ct/lgb.npz", "ct_clf": "base_ct/clf_ct.npz",
+    "tp_pfn": "base_tp/pfn.npz", "tp_lgb": "base_tp/lgb.npz",
+    "sk_row": "base_sk/new_rowreg.npz", "ssl_dn": "base_nn_clf/ssl_dn_clf.npz",
 }
 
 
-def load_old_f31():
-    """旧仓 F31 原始成员(o_ 前缀;派生列 p_cal/ev 由新侧折内派生,不导入)。"""
+def load_old_f31(prefer_local: bool):
+    """历史 F31 原始成员(o_ 前缀);默认 frozen-first,可切到 local-first。"""
     out = {}
+    srcs = {}
     for d, pre in [("base", ""), ("base_te", "t_"), ("base_td", "d_"),
                    ("base_fm", "f_"), ("base_nn", "n_")]:
-        p = os.path.join(OLD, d)
-        if not os.path.isdir(p):
+        cur = paths.OUT_DIR / d
+        old = paths.old_outputs_dir() / d
+        files = set()
+        if prefer_local:
+            if cur.is_dir():
+                files.update(f.name for f in cur.iterdir() if f.suffix == ".npz")
+            if old.is_dir():
+                files.update(f.name for f in old.iterdir() if f.suffix == ".npz")
+        elif old.is_dir():
+            files.update(f.name for f in old.iterdir() if f.suffix == ".npz")
+        if not files:
             continue
-        for f in sorted(os.listdir(p)):
-            if f.endswith(".npz"):
-                z = np.load(os.path.join(p, f))
-                if "oof" in z and "pred" in z:
-                    out["o_" + pre + f[:-4]] = (np.asarray(z["oof"], float),
-                                                np.asarray(z["pred"], float))
-    return out
+        for f in sorted(files):
+            p = paths.resolve_output(f"{d}/{f}", prefer_old=not prefer_local)
+            z = np.load(p)
+            if "oof" in z and "pred" in z:
+                key = "o_" + pre + f[:-4]
+                out[key] = (np.asarray(z["oof"], float), np.asarray(z["pred"], float))
+                srcs[key] = f"{paths.source_tag(p)}:{p}"
+    return out, srcs
 
 
 def main():
     assert os.environ.get("ELO_SEED") == "777"
+    prefer_local = os.environ.get("ELO_PREFER_LOCAL_RANK6", "0") == "1"
     bases = vf.load_bases()
-    base = pd.read_parquet("data/processed/features.parquet")
+    base = pd.read_parquet(paths.FEATURES)
     train = base[base["is_train"] == 1].reset_index(drop=True)
     test = base[base["is_train"] == 0].reset_index(drop=True)
     y = train["target"]
@@ -66,14 +84,29 @@ def main():
     folds = ep.make_folds(y)
     _, znnc = v15.load_avg_parts(v15.NNCLF_PARTS_DIR)
     bases["z_nnc"] = znnc
-    for k, p in SC5_PATH.items():
+    sc_srcs = {}
+    for k, rel in SC5_PATH.items():
+        p = paths.resolve_output(rel, prefer_old=not prefer_local)
         z = np.load(p)
         bases[k] = (np.asarray(z["oof"], float), np.asarray(z["pred"], float))
-    old = load_old_f31()
+        sc_srcs[k] = f"{paths.source_tag(p)}:{p}"
+    old, old_srcs = load_old_f31(prefer_local)
     for k, v in old.items():
         assert v[0].shape == (len(train),) and v[1].shape == (len(test),), k
         bases[k] = v
-    print(f"[v39b] 旧仓成员 {len(old)} 个: {sorted(old)}", flush=True)
+    print(f"[v39b] SC5 成员来源:", flush=True)
+    for k in SC5:
+        print(f"[v39b]   {k:<8} <- {sc_srcs[k]}", flush=True)
+    print(
+        f"[v39b] 历史 F31 成员 {len(old)} 个; "
+        f"取数模式={'local-first' if prefer_local else 'frozen-first'}",
+        flush=True,
+    )
+    src_sum = {"outputs": 0, "old_outputs": 0, "external": 0}
+    for p in old_srcs.values():
+        tag = p.split(":", 1)[0]
+        src_sum[tag] = src_sum.get(tag, 0) + 1
+    print(f"[v39b] F31 来源统计: {src_sum}", flush=True)
 
     # 折噪声判别
     print("\n[v39b] 差分结构(折噪声会使 test 端收缩≈√10):")
@@ -130,19 +163,18 @@ def main():
     tbl = pd.DataFrame(rows).sort_values("oof").reset_index(drop=True)
     print("\n" + tbl.to_string(index=False), flush=True)
     best = tbl.iloc[0]
-    os.makedirs("outputs/v39", exist_ok=True)
-    with open("outputs/v39/union_results.json", "w") as f:
+    os.makedirs(paths.V39, exist_ok=True)
+    with open(os.path.join(paths.V39, "union_results.json"), "w") as f:
         json.dump(rows, f, ensure_ascii=False, indent=2)
     if best["exp"] not in ("A0 E10复现",):
-        np.savez("outputs/v39/union_best.npz",
+        np.savez(os.path.join(paths.V39, "union_best.npz"),
                  oof=oofs[best["exp"]], pred=preds[best["exp"]])
         pd.DataFrame({"card_id": test["card_id"], "target": preds[best["exp"]]}
-                     ).to_csv("outputs/v39/submission_v39b_union.csv", index=False)
-        with open("outputs/v39/union_best_config.json", "w") as f:
+                     ).to_csv(U2_OUT, index=False)
+        with open(os.path.join(paths.V39, "union_best_config.json"), "w") as f:
             json.dump(dict(exp=str(best["exp"]), oof=float(best["oof"])), f,
                       ensure_ascii=False, indent=2)
-        print(f"[v39b] 已保存 outputs/v39/submission_v39b_union.csv({best['exp']})",
-              flush=True)
+        print(f"[v39b] 已保存 {U2_OUT}({best['exp']})", flush=True)
 
 
 if __name__ == "__main__":

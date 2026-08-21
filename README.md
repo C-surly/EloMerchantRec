@@ -25,6 +25,7 @@ F1 = 0.6 * U2 + 0.4 * SC5
 仓库内已经包含:
 
 - 第六名链路所需的主流程代码
+- `tp` / `ct` / `ssl` / `sk` 旧成员的上游补全脚本
 - `SC5` / `U2` 终局融合代码
 - 终局融合所需的旧仓辅助输出
 - 最终参考向量，用于校验生成结果是否与 `3.59428` 对齐
@@ -51,7 +52,7 @@ python -m pip install -r requirements.txt
 | 模式 | 命令 | 用途 |
 | --- | --- | --- |
 | 主链路 | `bash run_all.sh` | 从原始数据生成当前仓主链路产物 |
-| 第六名全链路 | `bash run_rank6.sh` | 在主链路基础上继续生成 `SC5`、`U2` 和最终 `3.59428` |
+| 第六名全链路 | `bash run_rank6.sh` | 在主链路基础上继续生成 `nn_clf`、`dq`、`tp/ct/ssl/sk`、`SC5`、`U2` 和最终 `3.59428` |
 | 终局校验 | `python src/blending/blend_rank6.py` | 在 `SC5` 与 `U2` 已存在时重新生成最终提交并校验 |
 
 ## 时间预期
@@ -84,9 +85,10 @@ bash run_rank6.sh
 
 - `ELO_NN_DEVICE`: `GRU` / `GRU_X` / `NN_CLF` 使用的 GPU，默认 `0`
 - `ELO_TRF_DEVICE`: `Transformer` 使用的 GPU，默认与 `ELO_NN_DEVICE` 相同
-- `ELO_OLD_OUTPUTS_DIR`: 旧仓辅助输出目录，默认使用仓内 `external/old_outputs`
+- `ELO_OLD_OUTPUTS_DIR`: 历史成员目录，默认使用仓内 `external/old_outputs`
+- `ELO_PREFER_LOCAL_RANK6=1`: 让 `SC5/U2` 优先读取当前仓现算成员；默认关闭，以保持冻结口径 `3.59428`
 
-脚本会优先复用已经存在的中间产物，不会重复训练已完成步骤。
+脚本会优先复用已经存在的中间产物，不会重复训练已完成步骤。默认模式下 `SC5/U2` 仍按冻结口径优先读取历史成员；打开 `ELO_PREFER_LOCAL_RANK6=1` 后才切到“当前仓 `outputs/` 优先，`external/old_outputs` 兜底”。
 
 ## 目录
 
@@ -97,7 +99,6 @@ EloMerchantRec-rank6-release/
 ├── requirements.txt
 ├── run_all.sh
 ├── run_rank6.sh
-├── run.sh
 ├── artifacts/
 │   ├── card_order.csv
 │   └── f1_pred.npy
@@ -121,7 +122,17 @@ EloMerchantRec-rank6-release/
 │   ├── fuse_opt.py
 │   ├── archive/
 │   │   ├── v15_nn_clf.py
-│   │   └── v16_dq.py
+│   │   ├── v16_dq.py
+│   │   ├── tx_seq.py
+│   │   ├── tp_lgb.py
+│   │   ├── ct_lgb.py
+│   │   ├── ct_gen.py
+│   │   ├── ct_clf.py
+│   │   ├── ssl_clf.py
+│   │   ├── ssl_full_clf.py
+│   │   ├── ssl_dn_clf.py
+│   │   ├── tp_pfn.py
+│   │   └── sk_row.py
 │   └── blending/
 │       ├── pool_sc5.py
 │       ├── pool_union.py
@@ -133,7 +144,7 @@ EloMerchantRec-rank6-release/
 ## 说明
 
 - `run_all.sh` 负责生成当前仓主链路产物。
-- `run_rank6.sh` 在主链路基础上继续生成 `nn_clf`、`dq`、`SC5`、`U2` 和最终第六名提交。
-- `external/old_outputs` 已内置最终融合所需的旧仓辅助输出，因此不再依赖本机绝对路径。
+- `run_rank6.sh` 在主链路基础上继续生成 `nn_clf`、`dq`、`tp/ct/ssl/sk`、`SC5`、`U2` 和最终第六名提交。
+- `external/old_outputs` 现在只承担历史成员兜底输入，不再是 `SC5/U2` 的唯一来源。
 - 最终提交文件默认写到 `submission/submission_rank6_3.59428.csv.gz`。
 - `artifacts/` 中的参考文件只用于校验最终结果，不参与训练。

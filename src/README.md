@@ -22,6 +22,13 @@
 |---|---|
 | `archive/v15_nn_clf.py` | 训练 `nn_clf_parts` 与 `base_nn_clf/clf.npz` |
 | `archive/v16_dq.py` | 训练 `base_dq` 系列成员 |
+| `archive/tx_seq.py` | 生成 `ssl` 系列依赖的交易级序列缓存 |
+| `archive/tp_lgb.py` | 生成 `tp_lgb` |
+| `archive/ct_lgb.py` / `archive/ct_gen.py` | 生成 `ct` 家族回归成员 |
+| `archive/ct_clf.py` | 生成 `ct_clf` |
+| `archive/ssl_clf.py` / `archive/ssl_full_clf.py` / `archive/ssl_dn_clf.py` | 生成 `ssl` 家族分类成员 |
+| `archive/tp_pfn.py` | 生成 `tp_pfn` |
+| `archive/sk_row.py` | 生成 `sk_row` |
 | `blending/pool_sc5.py` | 生成 `SC5` |
 | `blending/pool_union.py` | 生成 `U2` |
 | `blending/blend_rank6.py` | 生成最终 `3.59428` 提交 |
@@ -31,4 +38,5 @@
 
 - 主链路: `bash run_all.sh`
 - 完整第六名链路: `bash run_rank6.sh`
-- `blending/` 下脚本由 `run_rank6.sh` 自动设置 `PYTHONPATH=src`
+- `run_rank6.sh` 会先现场生成 `tp/ct/ssl/sk` 等终局成员,`blending/` 阶段优先读取当前仓 `outputs/`
+- 若部分历史成员尚未自举,`blending/` 才会回退到 `external/old_outputs`

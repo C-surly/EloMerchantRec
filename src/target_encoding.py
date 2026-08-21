@@ -26,7 +26,9 @@ from sklearn.metrics import mean_squared_error
 
 import elo_pipeline as ep
 
-BASE_DIR = "outputs/base"
+import paths
+
+BASE_DIR = paths.out("base")
 TE_PREFIX = ("te_", "teor_", "tetm_")   # v1 用 te_,v2 起按编码目标分 teor_/tetm_
 KEYSET = os.environ.get("ELO_TE_KEYS", "v1")      # v1=原 8 键;v2=+行为分箱与高基数众数
 ENCODE_TM = os.environ.get("ELO_TE_TM", "0") == "1"  # 是否追加 clean-target 均值编码
@@ -141,7 +143,7 @@ def oof_target_encode(train, test, ybin, y, folds, alpha=20.0):
 
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else "train"
-    base = pd.read_parquet("data/processed/features.parquet")
+    base = pd.read_parquet(paths.FEATURES)
     train = base[base["is_train"] == 1].reset_index(drop=True)
     test = base[base["is_train"] == 0].reset_index(drop=True)
     y = train["target"]
@@ -155,11 +157,11 @@ def main():
                 print(f"  [{tag}] {c:12s} nunique={d[c].nunique():6d}")
         return
 
-    imp = pd.read_csv("outputs/feature_importance.csv")
+    imp = pd.read_csv(paths.FEATURE_IMPORTANCE)
     sel = [c for c in imp[imp["gain"] > 0].head(ep.CONFIG["TOP_K"])["feature"] if c in train.columns]
 
     # TE 矩阵算一次即缓存:后续每个基模型直接复用同一套编码,保证口径一致
-    cache = f"outputs/te_features_{KEYSET}{'_tm' if ENCODE_TM else ''}.npz"
+    cache = paths.out(f"te_features_{KEYSET}{'_tm' if ENCODE_TM else ''}.npz")
     if os.path.exists(cache):
         z = np.load(cache, allow_pickle=True)
         te_tr, te_te, names = z["tr"], z["te"], list(z["names"])

@@ -4,7 +4,13 @@ import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+FEATURES = ROOT / "data" / "processed" / "features.parquet"
+OUTPUTS = ROOT / "outputs"
+V39 = OUTPUTS / "v39"
+SUBMISSION = ROOT / "submission"
 DEFAULT_OLD_OUTPUTS = ROOT / "external" / "old_outputs"
+SC5_CSV = V39 / "submission_v39_best.csv"
+U2_CSV = V39 / "submission_v39b_union.csv"
 REQUIRED = [
     "base/lgb.npz",
     "base_te/lgb.npz",
@@ -18,6 +24,14 @@ REQUIRED = [
     "base_sk/new_rowreg.npz",
     "base_nn_clf/ssl_dn_clf.npz",
 ]
+
+
+def bootstrap() -> Path:
+    os.chdir(ROOT)
+    OUTPUTS.mkdir(parents=True, exist_ok=True)
+    V39.mkdir(parents=True, exist_ok=True)
+    SUBMISSION.mkdir(parents=True, exist_ok=True)
+    return ROOT
 
 
 def old_outputs_dir() -> Path:

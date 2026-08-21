@@ -35,17 +35,22 @@ from sklearn.metrics import mean_squared_error, roc_auc_score
 from sklearn.model_selection import StratifiedKFold
 from scipy.optimize import minimize
 
+import paths
+
 warnings.filterwarnings("ignore")
+paths.bootstrap()
 
 # ============================================================================
 # 0. 全局配置(本地 / Kaggle 自适应)
 # ============================================================================
 _KAGGLE_DIR = "/kaggle/input/elo-merchant-category-recommendation"
+_KAGGLE = os.path.exists(_KAGGLE_DIR)
 CONFIG = {
-    # 路径:Kaggle Notebook 中自动切换到官方数据集挂载目录
-    "DATA_DIR": _KAGGLE_DIR if os.path.exists(_KAGGLE_DIR) else "data/raw",
-    "PROC_DIR": "/kaggle/working" if os.path.exists(_KAGGLE_DIR) else "data/processed",
-    "OUT_DIR": "/kaggle/working" if os.path.exists(_KAGGLE_DIR) else "outputs",
+    # 路径:本地统一走 src/paths.py(绝对路径,与 cwd 无关);
+    #      Kaggle Notebook 中自动切换到官方数据集挂载目录
+    "DATA_DIR": _KAGGLE_DIR if _KAGGLE else paths.RAW,
+    "PROC_DIR": "/kaggle/working" if _KAGGLE else paths.PROC,
+    "OUT_DIR": "/kaggle/working" if _KAGGLE else paths.OUTPUTS,
     # 复现性(ELO_SEED 环境变量可覆盖,用于多 seed 平均)
     "SEED": int(os.environ.get("ELO_SEED", 2019)),
     "N_FOLDS": 10,          # 任务书要求:分层 10 折
