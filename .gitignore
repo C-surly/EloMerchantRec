@@ -12,3 +12,4 @@ outputs/*
 
 submission/*
 !submission/.gitkeep
+!submission/README.md
