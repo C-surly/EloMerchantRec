@@ -1,16 +1,38 @@
 # Components
 
-## 核心组件
+## 主链路
 
 | 路径 | 作用 |
 | --- | --- |
-| `artifacts/card_order.csv` | 保存测试集 `card_id` 的最终顺序 |
-| `artifacts/f1_pred.npy` | 保存与最终结果对应的预测向量 |
-| `src/export_submission.py` | 将 `card_order.csv` 与 `f1_pred.npy` 组装为提交文件 |
-| `src/verify_submission.py` | 对导出的提交文件进行哈希校验 |
-| `submission/submission_rank6_3.59428.csv.gz` | 仓库内已提供的最终提交文件 |
-| `run.sh` | 一键执行导出与校验 |
+| `src/elo_pipeline.py` | 生成主特征并训练基础世代模型 |
+| `src/hetero.py` | 训练异构基学习器 |
+| `src/target_encoding.py` | 生成并训练 TE 世代 |
+| `src/timediff.py` | 生成并训练 TD 世代 |
+| `src/formula.py` | 生成并训练 FM 世代 |
+| `src/seq_gru.py` | 生成月序列缓存并训练 GRU |
+| `src/seq_nn.py` | 训练 `gru_x` 与 `trf` |
+| `src/fuse_final.py` | 生成主链路融合结果 |
+
+## 第六名补充组件
+
+| 路径 | 作用 |
+| --- | --- |
+| `src/archive/v15_nn_clf.py` | 训练 `nn_clf_parts` 并合并为 `base_nn_clf/clf.npz` |
+| `src/archive/v16_dq.py` | 训练 `base_dq` 系列成员 |
+| `src/blending/pool_sc5.py` | 生成 `SC5` |
+| `src/blending/pool_union.py` | 生成 `U2` |
+| `src/blending/blend_rank6.py` | 按 `0.6 * U2 + 0.4 * SC5` 导出最终结果 |
+
+## 辅助产物
+
+| 路径 | 作用 |
+| --- | --- |
+| `external/old_outputs/` | `SC5` / `U2` 所需的旧仓辅助成员 |
+| `artifacts/card_order.csv` | 最终参考卡序 |
+| `artifacts/f1_pred.npy` | 最终参考预测向量 |
+| `run_all.sh` | 主链路运行入口 |
+| `run_rank6.sh` | 第六名完整运行入口 |
 
 ## 完整性结论
 
-就“复现 `3.59428` 对应提交文件”这个目标而言，当前组件是齐全的。
+当前仓库已经从“结果导出仓”升级为“代码复现仓”。就复现 `3.59428` 这一目标来说，代码组件和辅助产物已经齐全。

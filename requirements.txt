@@ -1,2 +1,17 @@
+# 建模主链路
 numpy==2.4.4
 pandas==2.2.3
+pyarrow==19.0.0
+scipy==1.15.2
+scikit-learn==1.6.1
+lightgbm==4.7.0
+xgboost==3.2.0
+catboost==1.2.10
+optuna==4.9.0
+matplotlib==3.10.0
+
+# 异构基学习器(MLP)所需;仅 v5_hetero.py 使用,CPU 版亦可运行
+torch==2.4.1
+
+# 线上提交与私榜标尺(可选)
+kaggle
